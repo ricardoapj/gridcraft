@@ -758,6 +758,22 @@ fn deleting_a_multi_area_row_selection_removes_every_area_and_undoes_once() {
 }
 
 #[test]
+fn delete_cells_entire_row_after_go_to_special_blanks_removes_every_blank_row() {
+    // Delete Cells… ▸ Entire row deleted only the first area's rows: of the blanks A2 and A4,
+    // A4's row stayed.
+    let mut s = s();
+    s.execute("range.setValues", json!({"range": "A1", "values": [["a"], [""], ["b"], [""], ["c"]]})).unwrap();
+    s.execute("selection.set", json!({"range": "A1:A5"})).unwrap();
+    s.execute("edit.goToSpecial", json!({"kind": "blanks"})).unwrap();
+    s.execute("home.deleteCells", json!({"shift": "row"})).unwrap();
+    assert_eq!((v(&s, "A1"), v(&s, "A2"), v(&s, "A3"), v(&s, "A4")), (Value::from("a"), Value::from("b"), Value::from("c"), Value::Empty));
+    // Entire column, with the areas named.
+    s.execute("range.setValues", json!({"range": "A1", "values": [[1, 2, 3, 4]]})).unwrap();
+    s.execute("home.deleteCells", json!({"range": "B1,D1", "shift": "column"})).unwrap();
+    assert_eq!((v(&s, "A1"), v(&s, "B1"), v(&s, "C1")), (Value::Number(1.0), Value::Number(3.0), Value::Empty));
+}
+
+#[test]
 fn move_columns_reorders_without_overwriting_and_undoes_once() {
     let mut s = s();
     s.execute("range.setValues", json!({"range": "A1", "values": [[1, 2, 3, 4, 5, 6, 7, 8]]})).unwrap();
